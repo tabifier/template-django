@@ -1,0 +1,39 @@
+# copy sha1 to a version file inside the docker workdir
+machine:
+  environment:
+    DOMAIN: circle-ci
+    DB_CONNECTION: mysql://ubuntu:@127.0.0.1/circle_test
+  python:
+    version: 2.7.6
+  services:
+    - docker
+
+dependencies:
+  cache_directories:
+    - ~/google-cloud-sdk
+  pre:
+    - curl https://bootstrap.pypa.io/ez_setup.py -o - | python
+    - pip install -r requirements.txt
+    - echo COMMIT="'$(git rev-parse HEAD)'; BRANCH='$(git rev-parse --abbrev-ref HEAD)'" > $CIRCLE_PROJECT_REPONAME/version.py
+    - ./deploy/install_gcloud.sh
+    - source $HOME/google-cloud-sdk/path.bash.inc && src/manage.py download_geoip_data
+    - ls -la src/geoip_data/data
+
+test:
+  override:
+    - cd src && source ../envs/testing && ./manage.py test
+  post:
+    - flake8 .
+
+experimental:
+  notify:
+    branches:
+      only:
+        - master
+
+deployment:
+  prod:
+    branch: master
+    commands:
+      - source $HOME/google-cloud-sdk/path.bash.inc && ./deploy/publish.sh
+      - source $HOME/google-cloud-sdk/path.bash.inc && ./deploy/rolling-update.sh

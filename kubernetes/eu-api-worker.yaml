@@ -1,0 +1,43 @@
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: djangoapp-worker-rc
+spec:
+  replicas: 2
+  selector:
+    app: djangoapp-worker
+    version: VERSION
+  template:
+    metadata:
+      name: djangoapp-worker
+      labels:
+        app: djangoapp-worker
+        version: VERSION
+    spec:
+      volumes:
+        - name: djangoapp-secrets
+          secret:
+            secretName: djangoapp-secrets
+      containers:
+      - name: celery
+        image: us.gcr.io/roller-io/eu_api:latest
+        ports:
+        - containerPort: 5555
+        volumeMounts:
+          - name: djangoapp-secrets
+            mountPath: /secrets/djangoapp-secrets
+            readOnly: true
+        command:
+          - "bash"
+          - "-c"
+        args:
+          - "source load_env_vars.sh && \
+             python manage.py celeryd"
+        resources:
+          limits:
+            cpu: 250m
+            memory: 256Mi
+          requests:
+            cpu: 125m
+            memory: 128Mi

@@ -1,0 +1,51 @@
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    component: djangoapp-rabbitmq
+  name: djangoapp-rabbitmq-rc
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: rabmitmq
+        component: djangoapp-rabbitmq
+    spec:
+      containers:
+      - image: rabbitmq:3.6.1-management
+        name: rabbitmq
+        env:
+        - name: RABBITMQ_ERLANG_COOKIE
+          value: api.roller.io
+        ports:
+        - containerPort: 5672
+        - containerPort: 15672
+        resources:
+          limits:
+            cpu: 250m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    component: djangoapp-rabbitmq
+  name: djangoapp-rabbitmq
+spec:
+  ports:
+  - port: 5672
+    targetPort: 5672
+    protocol: TCP
+    name: rabbit
+  - port: 15672
+    targetPort: 15672
+    protocol: TCP
+    name: management
+  selector:
+    app: rabmitmq
+    component: djangoapp-rabbitmq

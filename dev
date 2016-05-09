@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+$ pkill -f 9000
+manage runserver 0.0.0.0:9000

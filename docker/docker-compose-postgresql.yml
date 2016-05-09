@@ -1,0 +1,92 @@
+api_app:
+  restart: always
+  build: ./
+  expose:
+    - "8000"
+  volumes:
+    - /assets
+    - /src/cluster/nginx/
+    - .:/src
+  links:
+    - api_postgres_db:api_db
+    - rabbit
+  env_file: envs/localhost
+  command:   bash -c "
+        until pg_isready --host=api_db --port=$$POSTGRES_PORT; do sleep 1; done &&
+        python manage.py collectstatic --noinput &&
+        python manage.py runserver 0.0.0.0:8000"
+        # gunicorn -c ./config/gunicorn_dev_conf.py hello_world.wsgi:application"
+
+# api_worker:
+#   image: euapi_api_app
+#   restart: always
+#   volumes:
+#     - /assets
+#     - /src/cluster/nginx/
+#     - .:/src
+#   links:
+#     - api_postgres_db:api_db
+#     - rabbit
+#   env_file: envs/localhost
+#   command:   bash -c "
+#         until pg_isready --host=api_db --port=$$POSTGRES_PORT; do sleep 1; done &&
+#         python manage.py celeryd"
+#         # "
+
+api_nginx:
+  build: ./cluster/nginx
+  restart: always
+  volumes:
+    - ./cluster/nginx/certs:/certs
+    - ./cluster/nginx/sites-enabled:/etc/nginx/sites-enabled/
+  volumes_from:
+    - api_app
+  ports:
+    - "80:80"
+    - "443:443"
+    - "9000:9000"
+    - "5555:5555"
+  links:
+    - api_app:api_app
+  command: bash -c "nginx"
+
+api_postgres_db:
+  restart: always
+  image: postgres:latest
+  volumes_from:
+    - api_postgres_db_data
+  env_file: envs/localhost
+  ports:
+    - "5432:5432"
+
+api_postgres_db_data:
+  restart: always
+  image: postgres:latest
+  volumes:
+    - /var/lib/postgresql/data/pgdata
+  command: "/bin/true"
+
+rabbit:
+  restart: always
+  image: rabbitmq:3.6.1-management
+  environment:
+    - RABBITMQ_ERLANG_COOKIE='api.roller.io'
+  ports:
+    - "15672:15672"
+
+elastic:
+  restart: always
+  image: elasticsearch:2.2
+  volumes_from:
+    - elastic_data
+  env_file: envs/localhost
+  ports:
+    - "9200:9200"
+    - "9300:9300"
+
+elastic_data:
+  restart: always
+  image: elasticsearch:2.2
+  volumes:
+    - /usr/share/elasticsearch/data
+  command: "/bin/true"

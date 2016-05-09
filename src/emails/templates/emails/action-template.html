@@ -1,0 +1,96 @@
+{% load staticfiles %}
+{% load premailer %}
+
+{% premailer MEDIA_URL %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta name="viewport" content="width=device-width" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Actionable emails e.g. reset password</title>
+<link href="{% static "emails/css/styles.css" %}" media="all" rel="stylesheet" type="text/css" />
+</head>
+
+<body itemscope itemtype="http://schema.org/EmailMessage">
+
+<table class="body-wrap">
+	<tr>
+		<td></td>
+		<td class="container" max-width="600" min-width="320">
+			<div class="content">
+				<table class="logo" width="100%" cellpadding="0" cellspacing="0" itemprop="action" itemscope itemtype="http://schema.org/ConfirmAction">
+					<tr><td style=""><img src="{% static "emails/img/tabifier-full-logo.png" %}" /><td></tr>
+				</table>
+
+				<table class="main" width="100%" cellpadding="0" cellspacing="0" itemprop="action" itemscope itemtype="http://schema.org/ConfirmAction">
+					<tr>
+						<td class="content-wrap">
+							<meta itemprop="name" content="Confirm Email"/>
+							<table width="100%" cellpadding="0" cellspacing="0">
+								{% if title %}
+								<tr>
+									<td class="content-block email-title">
+										{% if title_color %}
+											<h1 style="color:{{ title_color }};">{{ title|safe }}</h1>
+										{% else %}
+											<h1>{{ title|safe }}</h1>
+										{% endif %}
+									</td>
+								</tr>
+								{% endif %}
+								<tr>
+									<td class="content-block">
+										{{ message|linebreaksbr }}
+									</td>
+								</tr>
+								{% if cta and cta.button_title %}
+								<tr>
+									<td class="ctablock aligncenter" itemprop="handler" itemscope itemtype="http://schema.org/HttpActionHandler">
+										<a style="background-color:{{ cta.button_color |default:"#00BCD4"}}; border: solid {{ cta.button_color |default:"#00BCD4"}};" href="{{ cta.button_link }}" class="btn-primary" itemprop="url">{{ cta.button_title }}</a>
+									</td>
+								</tr>
+								{% endif %}
+								{% if signature %}
+								<tr>
+									<td class="content-block signature-block">
+										{% if signature.name %}
+											{% if signature.sign_off %}
+												{{ signature.sign_off }}
+											{% else %}
+												Thanks,
+											{% endif %}
+											<br/><br/>
+										<strong>{{ signature.name }}</strong><br/>
+										{% endif %}
+										{% if signature.email %}
+										<a href="mailto:{{ signature.email }}?subject={{ signature.email_subject }}">{{ signature.email }}</a><br/>
+										{% endif %}
+									</td>
+								</tr>
+								{% endif %}
+							</table>
+						</td>
+					</tr>
+				</table>
+
+				<table class="footer" width="100%">
+					<tr>
+						<td class="footer-circles" style="background-image: url({% static "emails/img/footer-circles.png"%})"></td>
+					</tr>
+					<tr>
+						<td class="aligncenter content-block withlove">
+							Sent with <img height="10" alt="love" src="{% static "emails/img/heart.png"%}"/>&nbsp;from Tabifier<br/>
+							© 2016 Tabifier.com<br />
+						</td>
+					</tr>
+				</table>
+
+			</div>
+		</td>
+		<td></td>
+	</tr>
+</table>
+
+</body>
+</html>
+{% endpremailer %}

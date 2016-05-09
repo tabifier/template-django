@@ -1,0 +1,55 @@
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    component: djangoapp-elasticsearch
+  name: djangoapp-elasticsearch-rc
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: rabmitmq
+        component: djangoapp-elasticsearch
+    spec:
+      volumes:
+        - name: elastic-data
+          persistentVolumeClaim:
+            claimName: pvc-elastic-claim
+      containers:
+      - image: elasticsearch:2.2
+        name: elasticsearch
+        volumeMounts:
+        - mountPath: "/usr/share/elasticsearch/data"
+          name: elastic-data
+        ports:
+        - containerPort: 9200
+        - containerPort: 9300
+        resources:
+          limits:
+            cpu: 750m
+            memory: 1024Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    component: djangoapp-elasticsearch
+  name: djangoapp-elasticsearch
+spec:
+  ports:
+  - port: 9200
+    targetPort: 9200
+    protocol: TCP
+    name: http
+  - port: 9300
+    targetPort: 9300
+    protocol: TCP
+    name: transport
+  selector:
+    app: rabmitmq
+    component: djangoapp-elasticsearch

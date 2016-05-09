@@ -1,0 +1,81 @@
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: djangoapp-web-rc-VERSION
+spec:
+  replicas: 2
+  selector:
+    app: djangoapp-web
+    version: VERSION
+  template:
+    metadata:
+      name: djangoapp-web
+      labels:
+        app: djangoapp-web
+        version: VERSION
+    spec:
+      volumes:
+        - name: djangoapp-secrets
+          secret:
+            secretName: djangoapp-secrets
+        - name: assets
+          emptyDir:
+        - name: nginx
+          emptyDir:
+      containers:
+      - name: django
+        image: us.gcr.io/roller-io/eu_api:latest
+        ports:
+        - containerPort: 8001
+        volumeMounts:
+          - name: djangoapp-secrets
+            mountPath: /secrets/djangoapp-secrets
+            readOnly: true
+          - name: assets
+            mountPath: /assets
+          - name: nginx
+            mountPath: /nginx
+        command:
+          - "bash"
+          - "-c"
+        args:
+          - "source load_env_vars.sh && \
+             python manage.py collectstatic --noinput && \
+             cp -R /src/cluster/nginx/gcloud/django.conf /nginx && \
+             python manage.py runserver 0.0.0.0:8001"
+        resources:
+          limits:
+            cpu: 250m
+            memory: 256Mi
+          requests:
+            cpu: 125m
+            memory: 128Mi
+      - name: nginx
+        image: "us.gcr.io/roller-io/nginx:latest"
+        command:
+          - "bash"
+          - "-c"
+        args:
+          - "until [ -e /nginx/django.conf ]; do echo 'waiting for django.conf'; sleep 0.5; done && \
+             rm -rf /etc/nginx/sites-enabled/* && \
+             cp /nginx/django.conf /etc/nginx/sites-enabled/ && \
+             sed -i.bak s/api_app:8000/localhost:8001/g /etc/nginx/sites-enabled/django.conf && \
+             rm /etc/nginx/sites-enabled/django.conf.bak && \
+             nginx"
+        volumeMounts:
+          - name: assets
+            mountPath: /assets
+            readOnly: true
+          - name: nginx
+            mountPath: /nginx
+            readOnly: true
+        ports:
+          - containerPort: 8000
+        resources:
+          limits:
+            cpu: 250m
+            memory: 256Mi
+          requests:
+            cpu: 75m
+            memory: 64Mi

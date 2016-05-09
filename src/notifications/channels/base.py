@@ -1,0 +1,2 @@
+class ChannelBase(object):
+    pass

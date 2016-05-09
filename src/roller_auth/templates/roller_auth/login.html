@@ -1,0 +1,40 @@
+{% load i18n %}
+{% load static %}
+{% get_static_prefix as STATIC_PREFIX %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <div class="box-small-auth">
+      <form action="{% url 'roller_auth__login' %}" method="post" autocomplete="off">
+        {% csrf_token %}
+        {% if form.errors %}
+          <div class="form-errors">
+            <ul>
+            {% for field, errors in form.errors.items %}
+              <li>{{ errors|first }}</li>
+            {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+        <table>
+          <tr><td><label for="id_email">Email:</label></td><td>{{ form.email }}</td></tr>
+          <tr><td><label for="id_password">Password:</label></td><td>{{ form.password }}</td></tr>
+        </table>
+        <input type="submit" value="login" />
+        <input type="hidden" name="next" value="{{ next }}" />
+        {% comment %}
+
+        <div class="help-block pw-forgot-link">
+          <a class="wv-text--link" href="{% url 'roller_auth__password_reset' %}">{% trans "Forgot it?" %}</a>
+        </div>
+        {% endcomment %}
+
+
+      </form>
+    </div>
+  </body>
+</html>

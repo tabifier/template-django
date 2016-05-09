@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+docker exec -ti django_api_app_1 $@

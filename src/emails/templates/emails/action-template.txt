@@ -1,0 +1,13 @@
+{% autoescape off %}
+{{ message.strip }}
+
+{% if cta and cta.button_title %}
+{{ cta.button_title }}
+{{ cta.button_link }}
+{% endif %}
+
+{% if signature %}{% if signature.name %}{% if signature.sign_off %}{{ signature.sign_off }}{% else %}Thanks,{% endif %}
+
+{{ signature.name }}
+{% endif %}{% if signature.email %}{{ signature.email }}{% endif %}{% endif %}
+{% endautoescape %}
